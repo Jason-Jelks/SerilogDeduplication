@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Deduplication", "Serilog.Deduplication\Serilog.Deduplication.csproj", "{CC58D489-31F8-4B9F-98D1-EAF2636EA854}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Deduplication", "Serilog.Deduplication\Serilog.Deduplication.csproj", "{CC58D489-31F8-4B9F-98D1-EAF2636EA854}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Deduplication.Tests", "Serilog.Deduplication.Tests\Serilog.Deduplication.Tests.csproj", "{1D5D9A92-C908-4EEF-AAA5-F6D1A70D8A9D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{CC58D489-31F8-4B9F-98D1-EAF2636EA854}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC58D489-31F8-4B9F-98D1-EAF2636EA854}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC58D489-31F8-4B9F-98D1-EAF2636EA854}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D5D9A92-C908-4EEF-AAA5-F6D1A70D8A9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D5D9A92-C908-4EEF-AAA5-F6D1A70D8A9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D5D9A92-C908-4EEF-AAA5-F6D1A70D8A9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D5D9A92-C908-4EEF-AAA5-F6D1A70D8A9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

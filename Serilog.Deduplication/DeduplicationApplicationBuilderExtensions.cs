@@ -12,7 +12,7 @@ namespace Serilog.Deduplication.Extensions
             var deduplicationSettings = DeduplicationSettings.LoadFromConfiguration(configuration);
 
             // Register DeduplicationFilter as a singleton
-            services.AddSingleton(new DeduplicationFilter(deduplicationSettings.DeduplicationWindowMilliseconds));
+            services.AddSingleton(new DeduplicationFilter(deduplicationSettings));
 
             return services;
         }
