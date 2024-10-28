@@ -1,0 +1,2 @@
+# SerilogDeduplication
+Serilog Deduplication filter
