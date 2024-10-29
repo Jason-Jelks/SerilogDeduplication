@@ -8,16 +8,14 @@
 
 	  <!-- Package Information -->
 	  <PackageId>Serilog.Deduplication</PackageId>
-	  <Version>1.0.0</Version>
+	  <Version>0.1.0-beta</Version>
 	  <Authors>Jason Jelks</Authors>
 	  <Company>Jelks Consulting</Company>
 	  <PackageDescription>A deduplication filter for Serilog logging to prevent repeated log entries within a configurable time window.</PackageDescription>
 	  <PackageTags>Serilog Logging Deduplication Filter</PackageTags>
 	  <PackageLicenseExpression>GPL-3.0</PackageLicenseExpression>
-	  <RepositoryUrl>https://github.com/your-repo-url</RepositoryUrl>
-	  <!-- Optional, link to your source control -->
-	  <PackageProjectUrl>https://github.com/your-repo-url</PackageProjectUrl>
-	  <!-- Optional, link to project page -->
+	  <RepositoryUrl>https://github.com/Jason-Jelks/SerilogDeduplication</RepositoryUrl>
+	  <PackageProjectUrl>https://github.com/Jason-Jelks/SerilogDeduplication</PackageProjectUrl>
 	  <PackageReleaseNotes>Initial release of Serilog deduplication filter.</PackageReleaseNotes>
   </PropertyGroup>
 
