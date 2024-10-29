@@ -179,7 +179,33 @@ Example configuration:
 
 The deduplication filter relies on an in-memory cache to track log entries and their timestamps. This cache grows as more unique logs are generated, so it’s important to monitor memory usage in environments with high log volume.
 
-- Periodically clear or prune the cache by removing entries older than the deduplication window.
+- **Pruning Feature**: The deduplication filter includes a configurable pruning feature. You can configure the `PruneIntervalMilliseconds` (how often the cache is checked) and the `CacheExpirationMilliseconds` (how long entries remain in the cache) in `appsettings.json`.
+
+```
+{
+  "Logging": {
+    "Deduplication": {
+      "PruneIntervalMilliseconds": 60000,  // Prune the cache every 60 seconds
+      "CacheExpirationMilliseconds": 300000  // Remove entries older than 5 minutes
+    }
+  }
+}
+```
+
+The cache will automatically remove entries older than the configured expiration time. Adjust the values based on your log volume and system requirements.
+
+#### **2. Thread Safety**
+
+The deduplication filter uses thread-safe collections (like `ConcurrentDictionary`) to ensure that multiple threads can safely access the cache. This is important in multi-threaded environments like web applications or services.
+
+- **Solution**:
+  - Use `ConcurrentDictionary` to ensure thread safety across all logging operations without the need for manual locking.
+  
+#### **3. Log Frequency**
+
+If your system generates logs at a high frequency, configuring appropriate deduplication windows can help reduce I/O overhead. Increasing the deduplication window for frequent log types (e.g., debug logs) can further reduce noise and improve performance.
+
+- **Example**: Use a longer deduplication window for `Information` or `Debug` logs to avoid excessive logging in systems with frequent messages.
 
 ---
 
@@ -198,4 +224,4 @@ However, any distributed copies or modifications of this software must:
 - Include the original license text.
 - Include the source code or a way to access it, if you distribute a modified version.
 
-For more details, please refer to the [LICENSE](./LICENSE) file or the official GNU GPL 3.0 text [here](https://www.gnu.org/licenses/gpl-3.0.html).
+For more details, please refer to the [LICENSE](./LICENSE) file
