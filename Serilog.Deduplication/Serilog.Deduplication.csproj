@@ -1,31 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net6.0; net8.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
+		<!-- Package Information -->
+		<PackageId>Serilog.Deduplication</PackageId>
+		<Version>0.1.0-beta</Version>
+		<Authors>Jason Jelks</Authors>
+		<Company>Jelks Consulting</Company>
+		<Description>A deduplication filter for Serilog logging to prevent repeated log entries within a configurable time window.</Description>
+		<PackageTags>Serilog Logging Deduplication Filter</PackageTags>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/Jason-Jelks/SerilogDeduplication</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/Jason-Jelks/SerilogDeduplication</PackageProjectUrl>
+		<PackageReleaseNotes>Initial release of Serilog deduplication filter.</PackageReleaseNotes>
+	</PropertyGroup>
 
-	  <!-- Package Information -->
-	  <PackageId>Serilog.Deduplication</PackageId>
-	  <Version>0.1.0-beta</Version>
-	  <Authors>Jason Jelks</Authors>
-	  <Company>Jelks Consulting</Company>
-	  <PackageDescription>A deduplication filter for Serilog logging to prevent repeated log entries within a configurable time window.</PackageDescription>
-	  <PackageTags>Serilog Logging Deduplication Filter</PackageTags>
-	  <PackageLicenseExpression>GPL-3.0</PackageLicenseExpression>
-	  <RepositoryUrl>https://github.com/Jason-Jelks/SerilogDeduplication</RepositoryUrl>
-	  <PackageProjectUrl>https://github.com/Jason-Jelks/SerilogDeduplication</PackageProjectUrl>
-	  <PackageReleaseNotes>Initial release of Serilog deduplication filter.</PackageReleaseNotes>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="Serilog" Version="4.1.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.*" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.*" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.*" />
+		<PackageReference Include="Serilog" Version="4.1.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
+	</ItemGroup>
 
 </Project>
