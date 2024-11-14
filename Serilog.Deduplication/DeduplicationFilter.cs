@@ -1,29 +1,24 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
-using System;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Serilog.Deduplication
 {
     public class DeduplicationFilter : ILogEventFilter, IDisposable
     {
         private readonly DeduplicationSettings _settings;
-        private readonly ConcurrentDictionary<string, DateTime> _logCache = new ConcurrentDictionary<string, DateTime>();
+        private readonly ConcurrentDictionary<string, DateTime> _logCache = new();
         private Timer _pruneTimer;
 
         public DeduplicationFilter(DeduplicationSettings settings)
         {
             _settings = settings;
-            // Start the pruning timer
             _pruneTimer = new Timer(PruneCache, null, _settings.PruneIntervalMilliseconds, _settings.PruneIntervalMilliseconds);
         }
 
         public bool IsEnabled(LogEvent logEvent)
         {
-            // Get the deduplication settings for the current log level
+            // Get deduplication settings for the current log level
             var deduplicationLevel = GetDeduplicationLevelForLogLevel(logEvent.Level);
 
             // If deduplication is disabled for this level, always allow the log entry
@@ -32,8 +27,14 @@ namespace Serilog.Deduplication
                 return true;
             }
 
-            // Define deduplication key (based on log message and other properties)
-            var logKey = $"{logEvent.Properties["Code"]}-{logEvent.MessageTemplate.Text}";
+            // Generate the deduplication key
+            var logKey = GetKey(logEvent);
+
+            // If the deduplication key is empty or null, allow the log entry
+            if (string.IsNullOrEmpty(logKey))
+            {
+                return true;  // No deduplication applied, so allow the log to proceed
+            }
 
             // Check if the log entry should be deduplicated
             if (_logCache.TryGetValue(logKey, out var lastLoggedTime))
@@ -41,7 +42,7 @@ namespace Serilog.Deduplication
                 var timeSinceLastLog = DateTime.UtcNow - lastLoggedTime;
                 if (timeSinceLastLog.TotalMilliseconds < deduplicationLevel.DeduplicationWindowMilliseconds)
                 {
-                    return false;  // Skip this log as it is a duplicate within the deduplication window
+                    return false;  // Skip this log as a duplicate within the deduplication window
                 }
             }
 
@@ -49,6 +50,42 @@ namespace Serilog.Deduplication
             _logCache[logKey] = DateTime.UtcNow;
             return true;
         }
+
+        public string GetKey(LogEvent logEvent)
+        {
+            // Collect parts of the key based on KeyProperties and MessageTemplate setting
+            var keyParts = new List<string>();
+
+            // Add each configured property to the key if it exists in the log event
+            if (_settings.KeyProperties.Any())
+            {
+                foreach (var prop in _settings.KeyProperties)
+                {
+                    if (logEvent.Properties.TryGetValue(prop, out var value))
+                    {
+                        // Extract raw string from ScalarValue if applicable
+                        if (value is ScalarValue scalarValue && scalarValue.Value != null)
+                        {
+                            keyParts.Add(scalarValue.Value.ToString());
+                        }
+                        else
+                        {
+                            keyParts.Add(value.ToString());
+                        }
+                    }
+                }
+            }
+
+            // Add MessageTemplate to key if configured to do so
+            if (_settings.IncludeMessageTemplate)
+            {
+                keyParts.Add(logEvent.MessageTemplate.Text);
+            }
+
+            // Join key parts with a separator to form the deduplication key
+            return string.Join("-", keyParts);
+        }
+
 
         // Pruning logic: removes entries that have been in the cache longer than the configured expiration time
         private void PruneCache(object state)
@@ -72,6 +109,7 @@ namespace Serilog.Deduplication
                 LogEventLevel.Error => _settings.Error,
                 LogEventLevel.Warning => _settings.Warning,
                 LogEventLevel.Debug => _settings.Debug,
+                LogEventLevel.Verbose => _settings.Verbose,
                 _ => _settings.Information,  // Default to Information level
             };
         }

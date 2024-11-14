@@ -76,6 +76,121 @@ namespace Serilog.Deduplication.Tests
             Assert.True(result);  // Log is allowed because the deduplication window has expired
         }
 
+        private DeduplicationFilter CreateDeduplicationFilter(
+            bool includeMessageTemplate = false,
+            List<string>? keyProperties = null)
+        {
+            var deduplicationSettings = new DeduplicationSettings
+            {
+                KeyProperties = keyProperties ?? new List<string>(),
+                IncludeMessageTemplate = includeMessageTemplate
+            };
+            return new DeduplicationFilter(deduplicationSettings);
+        }
+
+        private LogEvent CreateLogEvent(string messageTemplateText, Dictionary<string, string>? properties = null)
+        {
+            var propertiesList = new List<LogEventProperty>();
+            if (properties != null)
+            {
+                foreach (var (key, value) in properties)
+                {
+                    propertiesList.Add(new LogEventProperty(key, new ScalarValue(value)));
+                }
+            }
+
+            return new LogEvent(
+                timestamp: DateTimeOffset.UtcNow,
+                level: LogEventLevel.Information,
+                exception: null,
+                messageTemplate: new MessageTemplate(messageTemplateText, new List<MessageTemplateToken>()),
+                properties: propertiesList);
+        }
+
+        [Fact]
+        public void GetKey_NoKeyPropertiesAndNoMessageTemplate_ShouldReturnEmptyString()
+        {
+            // Arrange
+            var deduplicationFilter = CreateDeduplicationFilter(includeMessageTemplate: false);
+
+            var logEvent = CreateLogEvent("Test message");
+
+            // Act
+            var key = deduplicationFilter.GetKey(logEvent);
+
+            // Assert
+            Assert.Equal(string.Empty, key);
+        }
+
+        [Fact]
+        public void GetKey_NoKeyPropertiesAndIncludeMessageTemplate_ShouldReturnMessageTemplate()
+        {
+            // Arrange
+            var deduplicationFilter = CreateDeduplicationFilter(includeMessageTemplate: true);
+
+            var logEvent = CreateLogEvent("Test message");
+
+            // Act
+            var key = deduplicationFilter.GetKey(logEvent);
+
+            // Assert
+            Assert.Equal("Test message", key);
+        }
+
+        [Fact]
+        public void GetKey_WithKeyPropertiesOnly_ShouldReturnKeyProperty()
+        {
+            // Arrange
+            var deduplicationFilter = CreateDeduplicationFilter(keyProperties: new List<string> { "Code" });
+
+            var logEvent = CreateLogEvent("Test message", new Dictionary<string, string> { { "Code", "123" } });
+
+            // Act
+            var key = deduplicationFilter.GetKey(logEvent);
+
+            // Assert
+            Assert.Equal("123", key);
+        }
+
+        [Fact]
+        public void GetKey_WithKeyPropertiesAndIncludeMessageTemplate_ShouldReturnKeyPropertyAndMessageTemplate()
+        {
+            // Arrange
+            var deduplicationFilter = CreateDeduplicationFilter(
+                includeMessageTemplate: true,
+                keyProperties: new List<string> { "Code" });
+
+            var logEvent = CreateLogEvent("Test message", new Dictionary<string, string> { { "Code", "123" } });
+
+            // Act
+            var key = deduplicationFilter.GetKey(logEvent);
+
+            // Assert
+            Assert.Equal("123-Test message", key);
+        }
+
+        [Fact]
+        public void GetKey_MultipleKeyPropertiesAndIncludeMessageTemplate_ShouldReturnCompositeKey()
+        {
+            // Arrange
+            var deduplicationFilter = CreateDeduplicationFilter(
+                includeMessageTemplate: true,
+                keyProperties: new List<string> { "Code", "Source", "DeviceName" });
+
+            var logEvent = CreateLogEvent("Test message",
+                new Dictionary<string, string>
+                {
+                    { "Code", "123" },
+                    { "Source", "App" },
+                    { "DeviceName", "Device1" }
+                });
+
+            // Act
+            var key = deduplicationFilter.GetKey(logEvent);
+
+            // Assert
+            Assert.Equal("123-App-Device1-Test message", key);
+        }
         // Helper method to create a mock LogEvent
         private LogEvent CreateLogEvent(LogEventLevel level, string message)
         {

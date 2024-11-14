@@ -6,7 +6,8 @@
 
 - **Deduplication**: Prevents repeated log entries based on customizable criteria (e.g., time window, specific log properties).
 - **Severity-Based Deduplication**: Allows different deduplication windows for different log levels (e.g., Error, Warning, Information).
-- **Configurable**: Deduplication time window and deduplication behavior are fully configurable.
+- **Configurable**: Deduplication time window, deduplication behavior, and deduplication key components are fully configurable.
+- **Dynamic Key Generation**: Deduplication key can include specific log properties and/or the message template.
 - **Sink Agnostic**: Works with any Serilog sink (MongoDB, File, Console, etc.).
 - **Multi-targeted**: Supports both **.NET 6** and **.NET 8** applications.
 
@@ -14,7 +15,7 @@
 
 ## **How It Works**
 
-This filter tracks log entries based on a configurable key (e.g., a combination of `Code`, `Process`, and `Message`) and prevents duplicate logs within a defined time window (in milliseconds). It also supports **severity-based deduplication** for better control.
+This filter tracks log entries based on a configurable key (e.g., a combination of properties like `Code`, `Source`, and `Message`) and prevents duplicate logs within a defined time window (in milliseconds). It also supports **severity-based deduplication** for better control.
 
 - **Deduplication Key**: Logs are considered duplicates if they share the same key (e.g., `Code`, `Process`, and `Message`) and occur within the specified time window.
 - **Configurable Window**: You can define different deduplication windows (in milliseconds) for each log level (e.g., Error, Warning, Information).
@@ -23,7 +24,7 @@ This filter tracks log entries based on a configurable key (e.g., a combination 
 
 ## **Installation**
 
-To use this filter in your project, install the NuGet package (once published), or reference the project manually.
+To use this filter in your project, install the NuGet package (once published) or reference the project manually.
 
 ### **Manual Installation**
 
@@ -43,10 +44,15 @@ Add the **DeduplicationFilter** to your Serilog configuration. The following cod
 using Serilog;
 using DeduplicationFilter;
 
-var deduplicationWindowMs = 5000;  // 5 seconds deduplication window
+var deduplicationSettings = new DeduplicationSettings
+{
+    Error = new DeduplicationLevel { DeduplicationEnabled = true, DeduplicationWindowMilliseconds = 10000 },
+    Warning = new DeduplicationLevel { DeduplicationEnabled = true, DeduplicationWindowMilliseconds = 5000 },
+    Information = new DeduplicationLevel { DeduplicationEnabled = true, DeduplicationWindowMilliseconds = 3000 }
+};
 
 Log.Logger = new LoggerConfiguration()
-    .Filter.With(new DeduplicationFilter(deduplicationWindowMs))  // Apply deduplication filter
+    .Filter.With(new DeduplicationFilter(deduplicationSettings))
     .WriteTo.Console()  // Example sink: Console
     .CreateLogger();
 ```
@@ -91,35 +97,36 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-### **3. Build and Use the Deduplication Filter**
+### **3. Customizing the Deduplication Key**
 
-After configuring the deduplication filter in `appsettings.json`, build your project and start using the deduplication logic in your logs.
-
-For example, if your deduplication window is set to 5000 milliseconds (5 seconds), and two logs with the same key (`Code`, `Process`, `Message`) are triggered within this timeframe, only the first log will be stored, and the duplicate will be skipped.
-
----
-
-### **4. Customizing the Deduplication Key**
-
-You can modify the logic in the `DeduplicationFilter` to use different fields as part of the deduplication key. By default, the key is based on a combination of `Code`, `Process`, and `Message`. However, you can include other properties like `Source` or `Category` depending on your logging needs.
+You can now set deduplication key components in `appsettings.json` to allow flexible control over which properties are used for deduplication:
 
 ```
-var logKey = $"{logEvent.Properties["Source"]}-{logEvent.Properties["Code"]}-{logEvent.MessageTemplate.Text}";
+{
+  "Logging": {
+    "Deduplication": {
+      "KeyProperties": ["Code", "Process", "DeviceName"],
+      "IncludeMessageTemplate": true
+    }
+  }
+}
 ```
 
----
+In this configuration, the deduplication key will include `Code`, `Process`, `DeviceName`, and the `MessageTemplate`. If `IncludeMessageTemplate` is set to `false`, the message template will not be part of the deduplication key.
 
-### **5. Testing the Deduplication Filter**
+--- 
 
-Once the deduplication filter is set up and your application is running, you can test it to ensure that duplicate log entries are properly filtered out.
+### **4. Testing the Deduplication Filter**
+
+After configuring, you can test the deduplication logic to ensure duplicate log entries are filtered out.
 
 #### **Steps for Testing:**
 
 1. **Trigger Duplicate Logs**:
-   - Generate logs that have the same deduplication key (e.g., logs with the same `Code`, `Process`, and `Message`) within the configured deduplication window.
+   - Generate logs with the same deduplication key (e.g., logs with the same `Code`, `Process`, and `Message`) within the configured deduplication window.
 
 2. **Check Log Output**:
-   - Verify that only the first log is written and subsequent logs within the deduplication window are filtered out.
+   - Verify that only the first log is written and that duplicate logs within the deduplication window are filtered out.
 
 #### **Example Scenario:**
 
@@ -131,49 +138,7 @@ If your deduplication window is set to 5000 milliseconds, and the following logs
 
 ---
 
-### **6. Extending the Deduplication Filter**
-
-The **Deduplication Filter** is designed to be flexible and customizable. You can extend or modify it to better fit your application's needs.
-
-#### **Dynamic Deduplication Window**
-
-You can configure different deduplication windows for each log level in `appsettings.json`:
-
-```
-{
-  "Logging": {
-    "InformationDeduplicationWindowMilliseconds": 2000,
-    "ErrorDeduplicationWindowMilliseconds": 10000
-  }
-}
-```
-
-#### **Time-Based Deduplication Policies**
-
-Future enhancements could include **time-based deduplication policies** for dynamically adjusting the deduplication behavior based on system load or time of day.
-
-Example configuration:
-
-```
-{
-  "Logging": {
-    "TimeBasedPolicies": {
-      "PeakHours": {
-        "StartTime": "09:00:00",
-        "EndTime": "17:00:00",
-        "DeduplicationWindowMilliseconds": 10000
-      },
-      "OffPeakHours": {
-        "DeduplicationWindowMilliseconds": 2000
-      }
-    }
-  }
-}
-```
-
----
-
-### **7. Performance Considerations**
+### **5. Performance Considerations**
 
 #### **1. Cache Size and Memory Usage**
 
@@ -192,24 +157,22 @@ The deduplication filter relies on an in-memory cache to track log entries and t
 }
 ```
 
-The cache will automatically remove entries older than the configured expiration time. Adjust the values based on your log volume and system requirements.
+The cache will automatically remove entries older than the configured expiration time. Adjust these values based on your log volume and system requirements.
 
 #### **2. Thread Safety**
 
-The deduplication filter uses thread-safe collections (like `ConcurrentDictionary`) to ensure that multiple threads can safely access the cache. This is important in multi-threaded environments like web applications or services.
+The deduplication filter uses thread-safe collections (like `ConcurrentDictionary`) to ensure multiple threads can safely access the cache. This is essential in multi-threaded environments like web applications or services.
 
 - **Solution**:
-  - Use `ConcurrentDictionary` to ensure thread safety across all logging operations without the need for manual locking.
+  - Use `ConcurrentDictionary` to ensure thread safety across all logging operations without manual locking.
   
 #### **3. Log Frequency**
 
 If your system generates logs at a high frequency, configuring appropriate deduplication windows can help reduce I/O overhead. Increasing the deduplication window for frequent log types (e.g., debug logs) can further reduce noise and improve performance.
 
-- **Example**: Use a longer deduplication window for `Information` or `Debug` logs to avoid excessive logging in systems with frequent messages.
-
 ---
 
-### **8. License**
+### **6. License**
 
 This project is licensed under the **GNU General Public License v3.0**.
 
@@ -224,4 +187,4 @@ However, any distributed copies or modifications of this software must:
 - Include the original license text.
 - Include the source code or a way to access it, if you distribute a modified version.
 
-For more details, please refer to the [LICENSE](./LICENSE) file
+For more details, please refer to the [LICENSE](./LICENSE) file. 
