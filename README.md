@@ -97,7 +97,27 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
-### **3. Customizing the Deduplication Key**
+### **3. Adding Deduplication via IServiceCollection**
+
+To simplify the setup, you can now use the `AddDeduplication` extension method in `IServiceCollection`. This method registers the deduplication filter and settings directly from configuration.
+
+```
+using Serilog.Deduplication.Extensions;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add deduplication from configuration
+builder.Services.AddDeduplication(builder.Configuration);
+
+var deduplicationSettings = DeduplicationSettings.LoadFromConfiguration(builder.Configuration);
+
+Log.Logger = new LoggerConfiguration()
+    .Filter.With(new DeduplicationFilter(deduplicationSettings))
+    .WriteTo.Console()  // Use your preferred sink
+    .CreateLogger();
+```
+
+### **4. Customizing the Deduplication Key**
 
 You can now set deduplication key components in `appsettings.json` to allow flexible control over which properties are used for deduplication:
 
@@ -116,7 +136,7 @@ In this configuration, the deduplication key will include `Code`, `Process`, `De
 
 --- 
 
-### **4. Testing the Deduplication Filter**
+### **5. Testing the Deduplication Filter**
 
 After configuring, you can test the deduplication logic to ensure duplicate log entries are filtered out.
 
@@ -138,7 +158,7 @@ If your deduplication window is set to 5000 milliseconds, and the following logs
 
 ---
 
-### **5. Performance Considerations**
+### **6. Performance Considerations**
 
 #### **1. Cache Size and Memory Usage**
 
@@ -172,7 +192,7 @@ If your system generates logs at a high frequency, configuring appropriate dedup
 
 ---
 
-### **6. License**
+### **7. License**
 
 This project is licensed under the **GNU General Public License v3.0**.
 
